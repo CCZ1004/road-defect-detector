@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoadSafe AI | Defect Detection System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <!-- Add these with your other script dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <!-- Leaflet CSS/JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+
+    <!-- Marker Clustering -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+</head>
+<body>
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle"></i>
+        <span>Detection started successfully</span>
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo-container">
+            <div class="logo-icon">
+                <i class="fas fa-road"></i>
+            </div>
+            <div class="logo-text">Road<span>Safe</span></div>
+        </div>
+        <nav class="nav-container">
+            <a href="#" class="nav-item active" data-page="dashboard">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item" data-page="detection">
+                <i class="fas fa-video"></i>
+                <span>Live Detection</span>
+            </a>
+            <a href="#" class="nav-item" data-page="log">
+                <i class="fas fa-list"></i>
+                <span>Defect Log</span>
+            </a>
+            <a href="#" class="nav-item" data-page="reports">
+                <i class="fas fa-chart-bar"></i>
+                <span>Analytics</span>
+            </a>
+        </nav>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Dashboard Page -->
+        <div class="page-section active" id="dashboard-section">
+            <div class="header">
+                <h1 class="page-title">
+                    <i class="fas fa-tachometer-alt"></i>
+                    System Dashboard
+                </h1>
+                <div class="user-profile">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-road"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="totalDefects">0</h3>
+                        <p>Total Defects Detected</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="color: var(--danger); background-color: rgba(239, 35, 60, 0.1);">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="highConfidence">0</h3>
+                        <p>High Confidence</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="color: var(--success); background-color: rgba(76, 201, 240, 0.1);">
+                        <i class="fas fa-tachometer-alt"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="fpsCounter">0.0</h3>
+                        <p>Processing FPS</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="color: var(--primary); background-color: rgba(67, 97, 238, 0.1);">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="gpsCoordinates">0.0, 0.0</h3>
+                        <p>Current Location</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Performance Section -->
+            <div class="video-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-chart-line"></i>
+                        System Performance
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: var(--shadow-sm);">
+                            <h3 style="margin-bottom: 15px; color: var(--dark); font-size: 16px;">
+                                <i class="fas fa-microchip" style="color: var(--primary); margin-right: 8px;"></i>
+                                Processing Metrics
+                            </h3>
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                <div>
+                                    <p style="font-size: 13px; color: var(--gray); margin-bottom: 4px;">Frame Rate</p>
+                                    <p style="font-weight: 500; color: var(--dark);">30 FPS (Optimized)</p>
+                                </div>
+                                <div>
+                                    <p style="font-size: 13px; color: var(--gray); margin-bottom: 4px;">Resolution</p>
+                                    <p style="font-weight: 500; color: var(--dark);">640 × 480 px</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: var(--shadow-sm);">
+                            <h3 style="margin-bottom: 15px; color: var(--dark); font-size: 16px;">
+                                <i class="fas fa-info-circle" style="color: var(--primary); margin-right: 8px;"></i>
+                                System Information
+                            </h3>
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                <div>
+                                    <p style="font-size: 13px; color: var(--gray); margin-bottom: 4px;">Detection Model</p>
+                                    <p style="font-weight: 500; color: var(--dark);">YOLOv8 (Optimized)</p>
+                                </div>
+                                <div>
+                                    <p style="font-size: 13px; color: var(--gray); margin-bottom: 4px;">Last Detection</p>
+                                    <p style="font-weight: 500; color: var(--dark);" id="lastDetectionTime">Never</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Detection Page -->
+        <div class="page-section" id="detection-section">
+            <div class="header">
+                <h1 class="page-title">
+                    <i class="fas fa-video"></i>
+                    Live Defect Detection
+                </h1>
+                <div class="user-profile">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="video-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-camera"></i>
+                        Real-time Feed
+                    </h2>
+                    <div class="status-badge offline" id="statusIndicator">OFFLINE</div>
+                </div>
+                <div class="card-body">
+                    <div class="video-container">
+                        <img id="videoFeed" class="video-feed">
+                        <div class="video-overlay">
+                            <i class="fas fa-broadcast-tower"></i>
+                            <span id="fpsDisplay">0.0</span> FPS
+                        </div>
+                        
+                        <div class="loading-overlay" id="loadingOverlay">
+                            <div class="loader"></div>
+                            <p>Initializing camera feed...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="controls">
+                        <button class="btn btn-primary" id="startBtn">
+                            <i class="fas fa-play"></i> Start Detection
+                        </button>
+                        <button class="btn btn-danger" id="stopBtn">
+                            <i class="fas fa-power-off"></i> Stop
+                        </button>
+                    </div>
+                    
+                    <div style="margin-top: 20px; background: white; padding: 16px; border-radius: 8px; box-shadow: var(--shadow-sm);">
+                        <h3 style="margin-bottom: 12px; font-size: 16px; color: var(--dark);">
+                            <i class="fas fa-info-circle" style="color: var(--primary); margin-right: 8px;"></i>
+                            Detection Status
+                        </h3>
+                        <p style="color: var(--gray); font-size: 14px;">
+                            <i class="fas fa-history" style="margin-right: 8px;"></i>
+                            <strong>Last Defect:</strong> <span id="lastDefect">No defects detected yet</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Defect Log Page -->
+        <div class="page-section" id="log-section">
+            <div class="header">
+                <h1 class="page-title">
+                    <i class="fas fa-list"></i>
+                    Defect History
+                </h1>
+                <div class="user-profile">
+                    <div class="filter-spinner">
+                        <select id="yearFilter" class="spinner-select">
+                            <option value="all">All Years</option>
+                        </select>
+                        <div class="spinner-arrow">
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-spinner">
+                        <select id="monthFilter" class="spinner-select" disabled>
+                            <option value="all">All Months</option>
+                        </select>
+                        <div class="spinner-arrow">
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline" id="exportBtn">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </div>
+            
+            <div class="defects-container">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Confidence</th>
+                                <th>Location</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="defectsTableBody">
+                            <tr>
+                                <td colspan="4" class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>No defects detected yet</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Analytics Page -->
+        <div class="page-section" id="reports-section">
+            <div class="header">
+                <h1 class="page-title">
+                    <i class="fas fa-chart-pie"></i>
+                    Defect Analytics
+                </h1>
+            </div>
+
+            <!-- Defect Type Report -->
+            <div class="report-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-chart-bar"></i>
+                        Defect Type Distribution
+                    </h2>
+                    <button class="btn btn-outline" id="refreshTypeReport">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="defectTypeChart"></canvas>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Count</th>
+                                    <th>Avg Confidence</th>
+                                    <th>First Detected</th>
+                                    <th>Last Detected</th>
+                                </tr>
+                            </thead>
+                            <tbody id="defectTypeData">
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Location Analysis Report -->
+            <div class="report-card">
+                <div class="card-header">
+                  <h2 class="card-title">
+                    <i class="fas fa-map-marked-alt"></i>
+                    Defect Hotspots
+                  </h2>
+                  <div class="stats-badge">
+                    <span id="hotspotCount">0</span> hotspots found
+                    <span id="gpsCoverage">(0% GPS coverage)</span>
+                  </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Location</th>
+                                    <th>Defect Count</th>
+                                    <th>Main Type</th>
+                                    <th>Last Detected</th>
+                                </tr>
+                            </thead>
+                            <tbody id="hotspotData" >
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="map-wrapper">
+                        <div id="hotspotMap" style="height: 500px; width: 100%;">
+                            <div class="map-fallback">
+                              <i class="fas fa-map-marked-alt"></i>
+                              <p>Loading map data...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize variables
+        let detectionActive = false;
+        let defects = [];
+        
+        // DOM elements
+        const videoFeed = document.getElementById('videoFeed');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const fpsDisplay = document.getElementById('fpsDisplay');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const fpsCounter = document.getElementById('fpsCounter');
+        const totalDefects = document.getElementById('totalDefects');
+        const highConfidence = document.getElementById('highConfidence');
+        const notification = document.getElementById('notification');
+        const defectsTableBody = document.getElementById('defectsTableBody');
+        const lastDefect = document.getElementById('lastDefect');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const exportBtn = document.getElementById('exportBtn');
+        const lastDetectionTime = document.getElementById('lastDetectionTime');
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', initApp);
+        function initApp() {
+            setupEventListeners();
+            updateStats();
+            
+            // Hide loading overlay initially
+            loadingOverlay.style.display = 'none';
+            
+            initExportFilters();
+
+            // Disable stop button initially
+            stopBtn.disabled = true;
+            window.defectTypeChart = null;
+            window.hotspotMap = null;
+            window.hotspotMarkers = null;
+            // Load reports if on reports section (ADD THIS INSIDE initApp)
+            if (document.getElementById('reports-section')?.classList.contains('active')) {
+                loadDefectTypeReport();
+                loadLocationReport();
+            }
+        }
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            startBtn.addEventListener('click', startDetection);
+            stopBtn.addEventListener('click', stopDetection);
+            exportBtn.addEventListener('click', exportCSV);
+    
+            // Setup sidebar navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all items
+                    document.querySelectorAll('.nav-item').forEach(i => {
+                        i.classList.remove('active');
+                    });
+                    
+                    // Add active class to clicked item
+                    this.classList.add('active');
+                    
+                    // Hide all sections
+                    document.querySelectorAll('.page-section').forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    
+                    // Show the selected section
+                    const pageId = this.getAttribute('data-page');
+                    const targetSection = document.getElementById(`${pageId}-section`);
+                    if (targetSection) {
+                        targetSection.classList.add('active');
+                        
+                        // Update stats when switching to dashboard
+                        if (pageId === 'dashboard') {
+                            updateStats();
+                        }
+                        
+                        // Update defects table when switching to log
+                        if (pageId === 'log') {
+                            updateDefectsTable();
+                        }
+                    }
+                });
+            });
+            // Add report refresh buttons
+            document.getElementById('refreshTypeReport')?.addEventListener('click', loadDefectTypeReport);
+            
+            // Setup sidebar navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all items
+                    document.querySelectorAll('.nav-item').forEach(i => {
+                        i.classList.remove('active');
+                    });
+                    
+                    // Add active class to clicked item
+                    this.classList.add('active');
+                    
+                    // Get page ID from clicked element
+                    const pageId = this.getAttribute('data-page'); // This is the critical line that needs to be inside
+                    
+                    // Hide all sections
+                    document.querySelectorAll('.page-section').forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    
+                    // Show the selected section
+                    const targetSection = document.getElementById(`${pageId}-section`);
+                    if (targetSection) {
+                        targetSection.classList.add('active');
+                        
+                        // Load appropriate data
+                        if (pageId === 'dashboard') {
+                            updateStats();
+                        } else if (pageId === 'log') {
+                            updateDefectsTable();
+                        } else if (pageId === 'reports') {
+                            loadDefectTypeReport();
+                            loadLocationReport();
+                        }
+                    }
+                });
+            });
+        }
+        
+        // Start defect detection
+        function startDetection() {
+            if (detectionActive) return;
+            
+            // Show loading overlay
+            loadingOverlay.style.display = 'flex';
+            
+            // Start detection via API
+            fetch('/start_detection', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        detectionActive = true;
+                        statusIndicator.textContent = 'LIVE';
+                        statusIndicator.className = 'status-badge live';
+                        startBtn.disabled = true;
+                        stopBtn.disabled = false;
+                        
+                        // Start the video stream with cache busting
+                        videoFeed.src = '/video_feed?' + new Date().getTime();
+                        
+                        // Hide loading overlay after video starts
+                        videoFeed.onload = function() {
+                            loadingOverlay.style.display = 'none';
+                            lastDetectionTime.textContent = new Date().toLocaleTimeString();
+                        };
+                        
+                        // Start updating stats
+                        updateStatsPeriodically();
+                        
+                        showNotification('Detection started successfully');
+                    } else {
+                        showNotification('Failed to start detection', true);
+                        loadingOverlay.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error starting detection:', error);
+                    showNotification('Failed to start detection', true);
+                    loadingOverlay.style.display = 'none';
+                });
+        }
+        
+        // Stop detection
+        function stopDetection() {
+            fetch('/stop_detection', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        detectionActive = false;
+                        statusIndicator.textContent = 'OFFLINE';
+                        statusIndicator.className = 'status-badge offline';
+                        startBtn.disabled = false;
+                        stopBtn.disabled = true;
+                        
+                        // Stop the video feed
+                        videoFeed.src = '';
+                        
+                        showNotification('Detection stopped');
+                    } else {
+                        showNotification('Failed to stop detection', true);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error stopping detection:', error);
+                    showNotification('Failed to stop detection', true);
+                });
+        }
+        
+        // Update stats periodically
+        function updateStatsPeriodically() {
+            if (!detectionActive) return;
+            
+            fetch('/get_stats')
+                .then(response => response.json())
+                .then(data => {
+                    // Update FPS displays
+                    fpsDisplay.textContent = data.fps.toFixed(1);
+                    fpsCounter.textContent = data.fps.toFixed(1);
+                    
+                    // Update defect count
+                    totalDefects.textContent = data.defect_count;
+                    
+                    // Update GPS coordinates
+                    if (data.gps) {
+                        document.getElementById('gpsCoordinates').textContent = 
+                            `${data.gps[0].toFixed(6)}, ${data.gps[1].toFixed(6)}`;
+                    }
+                    
+                    // Calculate high confidence defects (confidence > 0.7)
+                    if (defects.length > 0) {
+                        const highConfidenceCount = defects.filter(d => d.confidence > 0.7).length;
+                        highConfidence.textContent = highConfidenceCount;
+                    }
+                    
+                    // Update defects table periodically
+                    if (data.defect_count > defects.length) {
+                        updateDefectsTable();
+                    }
+                    
+                    // Continue updating
+                    setTimeout(updateStatsPeriodically, 1000);
+                })
+                .catch(error => {
+                    console.error('Error fetching stats:', error);
+                    // Retry after a delay
+                    setTimeout(updateStatsPeriodically, 1000);
+                });
+        }
+        
+        // Update defects table
+        function updateDefectsTable() {
+            fetch('/get_defects')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        defects = data.defects || [];
+                        
+                        // Clear the table
+                        defectsTableBody.innerHTML = '';
+                        
+                        if (defects.length === 0) {
+                            defectsTableBody.innerHTML = `
+                                <tr>
+                                    <td colspan="4" class="empty-state">
+                                        <i class="fas fa-inbox"></i>
+                                        <p>No defects detected yet</p>
+                                    </td>
+                                </tr>
+                            `;
+                            return;
+                        }
+                        
+                        // Add defects to the table (newest first)
+                        defects.forEach(defect => {
+                            const row = document.createElement('tr');
+                            
+                            // Format location display
+                            let locationHtml;
+                            if (defect.latitude && defect.longitude && 
+                                defect.latitude !== 0 && defect.longitude !== 0) {
+                                locationHtml = `
+                                    <div class="location-data">
+                                        <i class="fas fa-map-marker-alt" style="color: var(--success)"></i>
+                                        <span>${defect.latitude.toFixed(6)}, ${defect.longitude.toFixed(6)}</span>
+                                    </div>
+                                    <small class="gps-status">${defect.gps_status || 'Valid GPS'}</small>
+                                `;
+                            } else {
+                                locationHtml = `
+                                    <div class="location-data">
+                                        <i class="fas fa-map-marker-alt" style="color: var(--danger)"></i>
+                                        <span>No GPS Data</span>
+                                    </div>
+                                    <small class="gps-status error">${defect.gps_status || 'GPS unavailable'}</small>
+                                `;
+                            }
+                            
+                            // Format timestamp for display
+                            const timestamp = defect.timestamp ? 
+                                new Date(defect.timestamp).toLocaleString() : 
+                                'Unknown time';
+                            
+                            row.innerHTML = `
+                                <td>${defect.class || 'Unknown'}</td>
+                                <td>${(defect.confidence * 100).toFixed(1)}%</td>
+                                <td class="location-cell">
+                                    ${locationHtml}
+                                </td>
+                                <td>${timestamp}</td>
+                            `;
+                            defectsTableBody.appendChild(row);
+                        });
+                        
+                        // Update last defect info
+                        if (defects.length > 0) {
+                            const lastDefectData = defects[0];
+                            lastDefect.innerHTML = `
+                                ${lastDefectData.class} (${(lastDefectData.confidence * 100).toFixed(1)}%) at 
+                                ${new Date(lastDefectData.timestamp).toLocaleTimeString()}
+                            `;
+                        }
+                    } else {
+                        console.error('Error fetching defects:', data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching defects:', error);
+                    defectsTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="empty-state error">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <p>Failed to load defects</p>
+                                <small>${error.message || 'Unknown error'}</small>
+                            </td>
+                        </tr>
+                    `;
+                });
+        }
+    
+        // Helper function to format date/time
+        function formatDateTime(timestamp) {
+            if (!timestamp) return '';
+            const date = new Date(timestamp);
+            return date.toLocaleString();
+        }
+    
+        // Helper function to capitalize first letter
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+        
+        // Format timestamp for display
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return '';
+            const [date, time] = timestamp.split('_');
+            return `${date} ${time.replace(/-/g, ':')}`;
+        }
+        
+        // Update stats on dashboard
+        function updateStats() {
+            fetch('/get_stats')
+                .then(response => response.json())
+                .then(data => {
+                    totalDefects.textContent = data.defect_count;
+                    fpsCounter.textContent = data.fps ? data.fps.toFixed(1) : '0.0';
+                });
+        }
+        
+        // Export CSV
+        function exportCSV() {
+            // Show the export modal
+            const modal = document.getElementById('exportModal');
+            modal.style.display = 'flex';
+            
+            // Populate years if not already done
+            if (document.getElementById('exportYearFilter').options.length <= 1) {
+                fetch('/get_defects_years')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const yearFilter = document.getElementById('exportYearFilter');
+                            data.years.forEach(year => {
+                                const option = document.createElement('option');
+                                option.value = year;
+                                option.textContent = year;
+                                yearFilter.appendChild(option);
+                            });
+                        }
+                    });
+            }
+            
+            // Close modal handlers
+            document.querySelectorAll('.close-modal').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    modal.style.display = 'none';
+                });
+            });
+            
+            // Year filter change
+            document.getElementById('exportYearFilter').addEventListener('change', function() {
+                const monthFilter = document.getElementById('exportMonthFilter');
+                monthFilter.innerHTML = '<option value="all">All Months</option>';
+                monthFilter.disabled = this.value === 'all';
+                
+                if (this.value !== 'all') {
+                    fetch(`/get_defects_months?year=${this.value}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                data.months.forEach(month => {
+                                    const option = document.createElement('option');
+                                    option.value = month;
+                                    option.textContent = new Date(2000, month-1, 1).toLocaleString('default', { month: 'long' });
+                                    monthFilter.appendChild(option);
+                                });
+                            }
+                        });
+                }
+            });
+            
+            // Confirm export
+            document.getElementById('confirmExport').addEventListener('click', function() {
+                const year = document.getElementById('exportYearFilter').value;
+                const month = document.getElementById('exportMonthFilter').value;
+                modal.style.display = 'none';
+                
+                showNotification('Preparing export...');
+                
+                // Create download link
+                const link = document.createElement('a');
+                link.href = `/export_defects_csv?year=${year}&month=${month}`;
+                link.download = `road_defects_${year}_${month === 'all' ? 'all_months' : month}.csv`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                setTimeout(() => {
+                    showNotification(`Exported data for ${year}${month !== 'all' ? '-' + month : ''}`);
+                }, 1000);
+            });
+        }
+        
+        // Show notification
+        function showNotification(message, isError = false) {
+            notification.innerHTML = `
+                <i class="${isError ? 'fas fa-exclamation-circle' : 'fas fa-check-circle'}"></i>
+                <span>${message}</span>
+            `;
+            notification.className = `notification ${isError ? 'error' : ''} show`;
+            
+            setTimeout(() => {
+                notification.className = 'notification';
+            }, 3000);
+        }
+        // Load defect type report
+        function loadDefectTypeReport() {
+            // Only proceed if on reports page
+            if (!document.getElementById('reports-section')?.classList.contains('active')) return;
+
+            fetch('/api/defect_type_report')
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        updateDefectTypeChart(data.report);
+                        updateDefectTypeTable(data.report);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading defect type report:', error);
+                    showNotification('Failed to load defect report', true);
+                });
+        }
+
+        // Update defect type chart
+        function updateDefectTypeChart(reportData) {
+            const ctx = document.getElementById('defectTypeChart').getContext('2d');
+            
+            // Only destroy if chart exists and is a valid Chart instance
+            if (window.defectTypeChart && typeof window.defectTypeChart.destroy === 'function') {
+                window.defectTypeChart.destroy();
+            }
+            
+            // Ensure we have valid data
+            if (!reportData || reportData.length === 0) {
+                console.warn('No data available for chart');
+                return;
+            }
+            
+            window.defectTypeChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: reportData.map(item => item.type),
+                    datasets: [{
+                        label: 'Defect Count',
+                        data: reportData.map(item => item.count),
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: 'Defect Type Distribution'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Number of Defects' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update defect type table
+        function updateDefectTypeTable(reportData) {
+            const tableBody = document.getElementById('defectTypeData');
+            tableBody.innerHTML = '';
+            
+            reportData.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.type}</td>
+                    <td>${item.count}</td>
+                    <td>${item.avg_confidence}</td>
+                    <td>${item.first_detected}</td>
+                    <td>${item.last_detected}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Load location report
+        function loadLocationReport() {
+            const mapElement = document.getElementById('hotspotMap');
+            mapElement.innerHTML = `<div class="map-fallback"><div class="spinner"></div><p>Loading map data...</p></div>`;
+
+            fetch('/api/location_report')
+            .then(response => response.json())
+            .then(data => {
+            if (data.success) {
+                updateLocationStats(data.stats);
+                updateHotspotTable(data.hotspots);
+                updateHotspotMap(data.hotspots);
+            }
+            })
+            .catch(error => {
+            mapElement.innerHTML = `<div class="map-fallback error"><i class="fas fa-exclamation-triangle"></i><p>${error.message}</p></div>`;
+            });
+        }
+
+        // Update location stats
+        function updateLocationStats(stats) {
+            document.getElementById('hotspotCount').textContent = stats.hotspot_count;
+            document.getElementById('gpsCoverage').textContent = `(${stats.gps_coverage} GPS coverage)`;
+        }
+
+        function updateHotspotMap(hotspots) {
+            const mapElement = document.getElementById('hotspotMap');
+            
+            // Clear existing map if it exists
+            if (window.hotspotMap) {
+                window.hotspotMap.remove();
+                window.hotspotMap = null;
+            }
+            
+            // Clear container content
+            mapElement.innerHTML = '';
+            
+            if (!hotspots || hotspots.length === 0) {
+                mapElement.innerHTML = `
+                    <div class="map-fallback">
+                        <i class="fas fa-map-marked-alt"></i>
+                        <p>No location data available</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Initialize new map
+            window.hotspotMap = L.map('hotspotMap').setView(
+                [hotspots[0].latitude, hotspots[0].longitude], 
+                13
+            );
+            
+            // Add tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(window.hotspotMap);
+
+            // Add markers
+            hotspots.forEach(hotspot => {
+                L.circleMarker(
+                    [hotspot.latitude, hotspot.longitude], 
+                    {
+                        radius: Math.min(5 + Math.sqrt(hotspot.defect_count), 15),
+                        color: '#e74c3c',
+                        fillColor: '#f03',
+                        fillOpacity: 0.5
+                    }
+                ).bindPopup(`
+                    <b>${hotspot.main_type}</b><br>
+                    Defects: ${hotspot.defect_count}<br>
+                    Last: ${hotspot.last_detected}
+                `).addTo(window.hotspotMap);
+            });
+        }
+
+        // Update hotspot table
+        function updateHotspotTable(hotspots) {
+            const tableBody = document.getElementById('hotspotData');
+            tableBody.innerHTML = '';
+            
+            if (!hotspots || hotspots.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>No location data available</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            hotspots.forEach(hotspot => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <div class="location-cell">
+                            <i class="fas fa-map-marker-alt"></i>
+                            ${hotspot.latitude.toFixed(4)}, ${hotspot.longitude.toFixed(4)}
+                        </div>
+                    </td>
+                    <td>${hotspot.defect_count}</td>
+                    <td>${hotspot.main_type || 'Unknown'}</td>
+                    <td>${hotspot.last_detected}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        function initHotspotMap(hotspots) {
+        const mapElement = document.getElementById('hotspotMap');
+        
+        // Ensure container is visible and has dimensions
+        if (!mapElement.offsetHeight) {
+            console.warn('Map container has no height');
+            return;
+        }
+        
+        // Clear existing map
+        if (window.hotspotMap) {
+            window.hotspotMap.remove();
+            window.hotspotMap = null;
+        }
+        
+        // Initialize map with fallback center if no hotspots
+        const center = hotspots[0] ? 
+            [hotspots[0].latitude, hotspots[0].longitude] : 
+            [0, 0];
+        
+        window.hotspotMap = L.map('hotspotMap', {
+            preferCanvas: true // Better for many markers
+        }).setView(center, 13);
+        
+        // Add tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(window.hotspotMap);
+        
+        // Add markers with clustering
+        const markers = L.markerClusterGroup();
+        
+        hotspots.forEach(hotspot => {
+            const marker = L.marker([hotspot.latitude, hotspot.longitude])
+            .bindPopup(`<b>${hotspot.main_type}</b><br>Defects: ${hotspot.defect_count}`);
+            markers.addLayer(marker);
+        });
+        
+        window.hotspotMap.addLayer(markers);
+        
+        // Trigger resize after short delay to ensure render
+        setTimeout(() => {
+            window.hotspotMap.invalidateSize(true);
+        }, 100);
+        }
+
+        // Initialize filters when page loads
+        function initExportFilters() {
+            // Load years
+            fetch('/get_defects_years')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const yearFilter = document.getElementById('yearFilter');
+                        data.years.forEach(year => {
+                            const option = document.createElement('option');
+                            option.value = year;
+                            option.textContent = year;
+                            yearFilter.appendChild(option);
+                        });
+                    }
+                });
+
+            // Year filter change
+            document.getElementById('yearFilter').addEventListener('change', function() {
+                const monthFilter = document.getElementById('monthFilter');
+                monthFilter.innerHTML = '<option value="all">All Months</option>';
+                monthFilter.disabled = this.value === 'all';
+                
+                if (this.value !== 'all') {
+                    fetch(`/get_defects_months?year=${this.value}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                data.months.forEach(month => {
+                                    const option = document.createElement('option');
+                                    option.value = month;
+                                    option.textContent = new Date(2000, month-1, 1).toLocaleString('default', { month: 'short' });
+                                    monthFilter.appendChild(option);
+                                });
+                            }
+                        });
+                }
+            });
+
+            // Export button
+            document.getElementById('exportBtn').addEventListener('click', function() {
+                const year = document.getElementById('yearFilter').value;
+                const month = document.getElementById('monthFilter').value;
+                
+                showNotification('Preparing export...');
+                
+                // Create hidden link for download
+                const link = document.createElement('a');
+                link.href = `/export_defects_csv?year=${year}&month=${month}`;
+                link.download = `road_defects_${year}${month !== 'all' ? `_${month}` : ''}.csv`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                setTimeout(() => {
+                    showNotification(`Exported ${year}${month !== 'all' ? `-${month}` : ''} data`);
+                }, 1000);
+            });
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
